@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import MovieShelfKit
 
 
 public struct MainScope: View {
@@ -18,6 +19,7 @@ public struct MainScope: View {
         .imageScale(.large)
         .foregroundStyle(.tint)
       Text("Main Scope")
+      Text("Api Key: \(AppEnv.apikey())")
     }
   }
 }
