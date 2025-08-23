@@ -3,7 +3,7 @@
 # Edit at https://www.toptal.com/developers/gitignore?templates=swift,cocoapods,xcode
 
 # Hiding Secret (3rd party apikey)
-# MovieShelf/Config/Secret.xcconfig
+MovieShelf/Config/Secret.xcconfig
 
 ### CocoaPods ###
 ## CocoaPods GitIgnore Template
