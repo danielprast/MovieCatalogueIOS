@@ -19,9 +19,19 @@ public struct MainScope: View {
         .imageScale(.large)
         .foregroundStyle(.tint)
       Text("Main Scope")
-      Text("Api Key: \(AppEnv.apikey())")
+      Text("Api Key: \(AppEnv.tokenKey())")
       Text("Base URL: \(AppEnv.baseUrl())")
       Text("Image Base URL: \(AppEnv.imageBaseUrl())")
+    }
+    .task {
+      let dc = MainDependencyFactory()
+      let remoteApi = dc.movieRemoteApi
+      do {
+        let dataModel = try await remoteApi.fetchMovies()
+        clog("data model", dataModel)
+      } catch {
+        clog("movie list error", (error as! MError))
+      }
     }
   }
 }

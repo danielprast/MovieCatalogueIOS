@@ -20,7 +20,7 @@ public struct AppEnv {
     Bundle.main.object(forInfoDictionaryKey: "IMAGE_BASE_URL") as! String
   }
 
-  public static func apikey() -> String {
+  public static func tokenKey() -> String {
     Bundle.main.object(forInfoDictionaryKey: "APIKEY") as! String
   }
 }
