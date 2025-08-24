@@ -12,6 +12,14 @@ public struct AppEnv {
 
   public init() {}
 
+  public static func baseUrl() -> String {
+    Bundle.main.object(forInfoDictionaryKey: "BASE_URL") as! String
+  }
+
+  public static func imageBaseUrl() -> String {
+    Bundle.main.object(forInfoDictionaryKey: "IMAGE_BASE_URL") as! String
+  }
+
   public static func apikey() -> String {
     Bundle.main.object(forInfoDictionaryKey: "APIKEY") as! String
   }

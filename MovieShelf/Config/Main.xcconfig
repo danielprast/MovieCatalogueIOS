@@ -8,10 +8,16 @@
 #include "./Secret.xcconfig"
 
 
+https_scheme = https:/$()/
+http_scheme = http:/$()/
+
+
 PRODUCT_BUNDLE_IDENTIFIER = com.danielprast.movieshelf
 APP_DISPLAY_NAME = Movie Shelf
 MARKETING_VERSION = 1.0
 CURRENT_PROJECT_VERSION = 1
 
 
+BASE_URL = $(https_scheme)api.themoviedb.org
+IMAGE_BASE_URL = $(https_scheme)image.tmdb.org/t/p/
 APIKEY = $(TOKEN_TMDB)

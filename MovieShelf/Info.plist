@@ -4,5 +4,9 @@
 <dict>
 	<key>APIKEY</key>
 	<string>$(APIKEY)</string>
+	<key>BASE_URL</key>
+	<string>$(BASE_URL)</string>
+	<key>IMAGE_BASE_URL</key>
+	<string>$(IMAGE_BASE_URL)</string>
 </dict>
 </plist>

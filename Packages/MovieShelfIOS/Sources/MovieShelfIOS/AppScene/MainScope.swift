@@ -20,6 +20,8 @@ public struct MainScope: View {
         .foregroundStyle(.tint)
       Text("Main Scope")
       Text("Api Key: \(AppEnv.apikey())")
+      Text("Base URL: \(AppEnv.baseUrl())")
+      Text("Image Base URL: \(AppEnv.imageBaseUrl())")
     }
   }
 }
