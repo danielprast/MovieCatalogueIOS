@@ -13,13 +13,36 @@ public struct FakeMovieRemoteApiImpl: MovieRemoteApi {
 
   public init() {}
 
-  public func fetchMovies() async throws -> MovieResponse {
+  public func fetchMovies(params: [String : any Sendable]) async throws -> MovieResponse {
     guard
       let jsonData = JsonResolver.readJsonFileFromResource(
         bundle: Foundation.Bundle.module,
         fileName: "movie_list"
       ),
       let dataModel = JsonResolver.decodeJson(from: jsonData, outputType: MovieResponse.self)
+    else {
+      throw MError.parsingError
+    }
+    return dataModel
+  }
+
+}
+
+
+public struct FakeMovieDetailRemoteApiImpl: MovieDetailRemoteApi {
+
+  public init() {}
+
+  public func fetchDetailMovie(id: String) async throws -> MovieDetailResponse {
+    guard
+      let jsonData = JsonResolver.readJsonFileFromResource(
+        bundle: Foundation.Bundle.module,
+        fileName: "movie_detail"
+      ),
+      let dataModel = JsonResolver.decodeJson(
+        from: jsonData,
+        outputType: MovieDetailResponse.self
+      )
     else {
       throw MError.parsingError
     }
