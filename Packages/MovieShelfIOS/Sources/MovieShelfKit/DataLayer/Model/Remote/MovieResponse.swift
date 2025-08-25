@@ -21,10 +21,10 @@ public struct MovieResponse: Codable, Sendable {
 
   public init(from decoder: any Decoder) throws {
     let container = try decoder.container(keyedBy: CodingKeys.self)
-    self.page = try container.decode(Int.self, forKey: .page)
-    self.results = try container.decode([MovieResponse.Result].self, forKey: .results)
-    self.totalPages = try container.decode(Int.self, forKey: .totalPages)
-    self.totalResults = try container.decode(Int.self, forKey: .totalResults)
+    self.page = try container.decodeIfPresent(Int.self, forKey: .page) ?? 0
+    self.results = try container.decodeIfPresent([MovieResponse.Result].self, forKey: .results) ?? []
+    self.totalPages = try container.decodeIfPresent(Int.self, forKey: .totalPages) ?? 0
+    self.totalResults = try container.decodeIfPresent(Int.self, forKey: .totalResults) ?? 0
   }
 
   public init(
@@ -69,20 +69,20 @@ public struct MovieResponse: Codable, Sendable {
 
     public init(from decoder: any Decoder) throws {
       let container: KeyedDecodingContainer<MovieResponse.Result.CodingKeys> = try decoder.container(keyedBy: MovieResponse.Result.CodingKeys.self)
-      self.adult = try container.decode(Bool.self, forKey: MovieResponse.Result.CodingKeys.adult)
-      self.backdropPath = try container.decode(String.self, forKey: MovieResponse.Result.CodingKeys.backdropPath)
-      self.genreIDS = try container.decode([Int].self, forKey: MovieResponse.Result.CodingKeys.genreIDS)
-      self.id = try container.decode(Int.self, forKey: MovieResponse.Result.CodingKeys.id)
-      self.originalLanguage = try container.decode(String.self, forKey: MovieResponse.Result.CodingKeys.originalLanguage)
-      self.originalTitle = try container.decode(String.self, forKey: MovieResponse.Result.CodingKeys.originalTitle)
-      self.overview = try container.decode(String.self, forKey: MovieResponse.Result.CodingKeys.overview)
-      self.popularity = try container.decode(Double.self, forKey: MovieResponse.Result.CodingKeys.popularity)
-      self.posterPath = try container.decode(String.self, forKey: MovieResponse.Result.CodingKeys.posterPath)
-      self.releaseDate = try container.decode(String.self, forKey: MovieResponse.Result.CodingKeys.releaseDate)
-      self.title = try container.decode(String.self, forKey: MovieResponse.Result.CodingKeys.title)
-      self.video = try container.decode(Bool.self, forKey: MovieResponse.Result.CodingKeys.video)
-      self.voteAverage = try container.decode(Double.self, forKey: MovieResponse.Result.CodingKeys.voteAverage)
-      self.voteCount = try container.decode(Int.self, forKey: MovieResponse.Result.CodingKeys.voteCount)
+      self.adult = try container.decodeIfPresent(Bool.self, forKey: MovieResponse.Result.CodingKeys.adult) ?? false
+      self.backdropPath = try container.decodeIfPresent(String.self, forKey: MovieResponse.Result.CodingKeys.backdropPath) ?? ""
+      self.genreIDS = try container.decodeIfPresent([Int].self, forKey: MovieResponse.Result.CodingKeys.genreIDS) ?? []
+      self.id = try container.decodeIfPresent(Int.self, forKey: MovieResponse.Result.CodingKeys.id) ?? -1
+      self.originalLanguage = try container.decodeIfPresent(String.self, forKey: MovieResponse.Result.CodingKeys.originalLanguage) ?? ""
+      self.originalTitle = try container.decodeIfPresent(String.self, forKey: MovieResponse.Result.CodingKeys.originalTitle) ?? ""
+      self.overview = try container.decodeIfPresent(String.self, forKey: MovieResponse.Result.CodingKeys.overview) ?? ""
+      self.popularity = try container.decodeIfPresent(Double.self, forKey: MovieResponse.Result.CodingKeys.popularity) ?? 0
+      self.posterPath = try container.decodeIfPresent(String.self, forKey: MovieResponse.Result.CodingKeys.posterPath) ?? ""
+      self.releaseDate = try container.decodeIfPresent(String.self, forKey: MovieResponse.Result.CodingKeys.releaseDate) ?? ""
+      self.title = try container.decodeIfPresent(String.self, forKey: MovieResponse.Result.CodingKeys.title) ?? ""
+      self.video = try container.decodeIfPresent(Bool.self, forKey: MovieResponse.Result.CodingKeys.video) ?? false
+      self.voteAverage = try container.decodeIfPresent(Double.self, forKey: MovieResponse.Result.CodingKeys.voteAverage) ?? 0
+      self.voteCount = try container.decodeIfPresent(Int.self, forKey: MovieResponse.Result.CodingKeys.voteCount) ?? -1
     }
 
     public init(
