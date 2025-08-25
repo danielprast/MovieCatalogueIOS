@@ -34,6 +34,9 @@ let package = Package(
       dependencies: [
         .product(name: "BZConnectionChecker", package: "BezetQit"),
         .product(name: "BZUtil", package: "BezetQit")
+      ],
+      resources: [
+        .process("Resources")
       ]
     ),
     .testTarget(
