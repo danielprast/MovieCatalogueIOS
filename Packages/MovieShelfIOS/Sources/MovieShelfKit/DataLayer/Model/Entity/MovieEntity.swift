@@ -19,24 +19,6 @@ public protocol MovieEntity: MEntity {
 }
 
 
-extension MovieEntity {
-
-  public static func mapFromMovieRemoteDTO(_ model: MovieResponse.Result) -> any MovieEntity {
-    return MovieEntityModel(
-      id: "\(model.id)",
-      movieId: model.id,
-      title: model.title,
-      description: model.overview,
-      posterImage: model.posterPath,
-      backdropImage: model.backdropPath,
-      releaseDate: model.releaseDate,
-      rating: model.voteAverage,
-      detail: MovieDetailEntityModel.makeEmpty()
-    )
-  }
-}
-
-
 public struct MovieEntityModel: MovieEntity {
   public let id: String
   public let movieId: Int
@@ -91,6 +73,20 @@ public struct MovieEntityModel: MovieEntity {
       releaseDate: releaseDate ?? self.releaseDate,
       rating: rating ?? self.rating,
       detail: detail ?? self.detail
+    )
+  }
+
+  public static func mapFromMovieRemoteDTO(_ model: MovieResponse.Result) -> MovieEntityModel {
+    return MovieEntityModel(
+      id: "\(model.id)",
+      movieId: model.id,
+      title: model.title,
+      description: model.overview,
+      posterImage: model.posterPath,
+      backdropImage: model.backdropPath,
+      releaseDate: model.releaseDate,
+      rating: model.voteAverage,
+      detail: MovieDetailEntityModel.makeEmpty()
     )
   }
 
