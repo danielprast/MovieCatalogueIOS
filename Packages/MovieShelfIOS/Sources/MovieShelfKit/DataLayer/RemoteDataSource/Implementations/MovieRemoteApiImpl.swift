@@ -57,7 +57,27 @@ public struct MovieRemoteApiImpl {
     }
   }
 
+  // MARK: - • Movie Detail
+
+  public func fetchDetailMovie(id: String) async throws -> MovieDetailResponse {
+    do {
+      let baseUrl = await remoteApiState.baseUrl
+      let headers = await remoteApiState.headers
+      return try await httpClient.performRequest(
+        decodable: MovieDetailResponse.self,
+        url: URL(string: baseUrl + ApiEndpoints.movieDetail(id: id).path)!,
+        method: .get,
+        headers: headers,
+        encoding: .url
+      )
+    } catch {
+      throw error as! MError
+    }
+  }
+
 }
 
 
-extension MovieRemoteApiImpl: MovieRemoteApi, MovieSearchRemoteApi {}
+extension MovieRemoteApiImpl: MovieRemoteApi,
+                              MovieSearchRemoteApi,
+                              MovieDetailRemoteApi {}

@@ -9,6 +9,7 @@ import Foundation
 
 
 public protocol MovieEntity: MEntity {
+  var id: String { get }
   var movieId: Int { get }
   var title: String { get }
   var description: String { get }

@@ -24,28 +24,6 @@ public protocol MovieDetailEntity: MEntity {
 }
 
 
-extension MovieDetailEntity {
-
-  public static func mapFromRemoteDTO(_ model: MovieDetailResponse) -> any MovieDetailEntity {
-    return MovieDetailEntityModel.init(
-      id: "\(model.id)",
-      movieId: model.id,
-      title: model.title,
-      tagline: model.tagline,
-      genre: model.genres.map { $0.name },
-      overview: model.overview,
-      releaseDate: model.releaseDate,
-      status: model.status,
-      rating: model.voteAverage,
-      revenue: model.revenue,
-      runtime: model.runtime,
-      posterImage: model.posterPath,
-      backdropImage: model.backdropPath
-    )
-  }
-}
-
-
 public struct MovieDetailEntityModel: MovieDetailEntity {
   public let id: String
   public let movieId: Int
@@ -106,6 +84,24 @@ public struct MovieDetailEntityModel: MovieDetailEntity {
       runtime: 0,
       posterImage: "",
       backdropImage: ""
+    )
+  }
+
+  public static func mapFromRemoteDTO(_ model: MovieDetailResponse) -> MovieDetailEntityModel {
+    return MovieDetailEntityModel.init(
+      id: "\(model.id)",
+      movieId: model.id,
+      title: model.title,
+      tagline: model.tagline,
+      genre: model.genres.map { $0.name },
+      overview: model.overview,
+      releaseDate: model.releaseDate,
+      status: model.status,
+      rating: model.voteAverage,
+      revenue: model.revenue,
+      runtime: model.runtime,
+      posterImage: model.posterPath,
+      backdropImage: model.backdropPath
     )
   }
 }

@@ -5,8 +5,16 @@
 //  Created by Daniel Prastiwa on 24/08/25.
 //
 
-public enum ApiEndpoints: String, Sendable {
-  case discoverMovies = "/3/discover/movie"
+public enum ApiEndpoints: Sendable {
+  case discoverMovies
+  case movieDetail(id: String)
 
-  public var path: String { self.rawValue }
+  public var path: String {
+    switch self {
+    case .discoverMovies:
+      "/3/discover/movie"
+    case .movieDetail(let id):
+      "/3/movie/\(id)"
+    }
+  }
 }

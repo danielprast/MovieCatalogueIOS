@@ -9,9 +9,11 @@ import Foundation
 import BZUtil
 
 
-public struct FakeMovieRemoteApiImpl: MovieRemoteApi {
+public struct FakeMovieRemoteApiImpl {
 
   public init() {}
+
+  // MARK: • Movie RemoteApi
 
   public func fetchMovies(params: [String : any Sendable]) async throws -> MovieResponse {
     guard
@@ -26,12 +28,7 @@ public struct FakeMovieRemoteApiImpl: MovieRemoteApi {
     return dataModel
   }
 
-}
-
-
-public struct FakeMovieDetailRemoteApiImpl: MovieDetailRemoteApi {
-
-  public init() {}
+  // MARK: • Movie Detail RemoteApi
 
   public func fetchDetailMovie(id: String) async throws -> MovieDetailResponse {
     guard
@@ -50,3 +47,6 @@ public struct FakeMovieDetailRemoteApiImpl: MovieDetailRemoteApi {
   }
 
 }
+
+
+extension FakeMovieRemoteApiImpl: MovieRemoteApi, MovieDetailRemoteApi {}
