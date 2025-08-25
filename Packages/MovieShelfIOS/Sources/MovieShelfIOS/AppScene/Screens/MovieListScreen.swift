@@ -20,23 +20,56 @@ public struct MovieListScreen: View {
 
   public var body: some View {
     contentBody
-      .navigationTitle("Movies")
-      .searchable(text: $movieViewModel.searchQuery, prompt: "Movie title...")
+      .frame(
+        maxWidth: .infinity,
+        maxHeight: .infinity
+      )
+      .navigationTitle("Top Rated Movies")
+      .searchable(
+        text: $movieViewModel.searchQuery,
+        prompt: "Movie title..."
+      )
       .task {
         movieViewModel.getMovies()
       }
   }
 
   public var contentBody: some View {
-    List(movieViewModel.movies, id: \.id) { movie in
-      Text(movie.title)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Rectangle().fill(Color.white))
-        .listRowSeparator(.hidden)
-        .onTapGesture {
-          movieViewModel.selectedMovie = movie
-          movieViewModel.presentDetail()
+    ZStack {
+      if movieViewModel.getMoviesLoading {
+        ProgressView()
+      } else {
+        if let error = movieViewModel.getMoviesError {
+          ErrorView(message: error.errorMessage)
+        } else {
+          if movieViewModel.movieSearchMode {
+            ListView(movies: movieViewModel.filteredMovies)
+          } else {
+            ListView(movies: movieViewModel.movies)
+          }
         }
+      }
+    }
+  }
+
+  @ViewBuilder
+  fileprivate func ListView(movies: [any MovieEntity]) -> some View {
+    if movies.isEmpty {
+      ErrorView(message: "No Data")
+    } else {
+      List(movies, id: \.id) { movie in
+        Text(movie.title)
+          .frame(
+            maxWidth: .infinity,
+            alignment: .leading
+          )
+          .background(Rectangle().fill(Color.white))
+          .listRowSeparator(.hidden)
+          .onTapGesture {
+            movieViewModel.selectedMovie = movie
+            movieViewModel.presentDetail()
+          }
+      }
     }
   }
 }

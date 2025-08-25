@@ -28,6 +28,21 @@ public struct FakeMovieRemoteApiImpl {
     return dataModel
   }
 
+  // MARK: • Movie Search RemoteApi
+
+  public func fetchSearchMovies(params: [String : any Sendable]) async throws -> MovieResponse {
+    guard
+      let jsonData = JsonResolver.readJsonFileFromResource(
+        bundle: Foundation.Bundle.module,
+        fileName: "movie_list"
+      ),
+      let dataModel = JsonResolver.decodeJson(from: jsonData, outputType: MovieResponse.self)
+    else {
+      throw MError.parsingError
+    }
+    return dataModel
+  }
+
   // MARK: • Movie Detail RemoteApi
 
   public func fetchDetailMovie(id: String) async throws -> MovieDetailResponse {
@@ -49,4 +64,6 @@ public struct FakeMovieRemoteApiImpl {
 }
 
 
-extension FakeMovieRemoteApiImpl: MovieRemoteApi, MovieDetailRemoteApi {}
+extension FakeMovieRemoteApiImpl: MovieRemoteApi,
+                                  MovieDetailRemoteApi,
+                                  MovieSearchRemoteApi {}

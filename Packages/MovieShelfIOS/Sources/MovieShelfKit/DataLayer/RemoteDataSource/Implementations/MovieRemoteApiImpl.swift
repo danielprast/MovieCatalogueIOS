@@ -25,7 +25,7 @@ public struct MovieRemoteApiImpl {
     do {
       let baseUrl = await remoteApiState.baseUrl
       let headers = await remoteApiState.headers
-      return try await httpClient.performRequest(
+      let model = try await httpClient.performRequest(
         decodable: MovieResponse.self,
         url: URL(string: baseUrl + ApiEndpoints.discoverMovies.path)!,
         method: .get,
@@ -33,6 +33,8 @@ public struct MovieRemoteApiImpl {
         parameters: params.isEmpty ? nil : params,
         encoding: .url
       )
+      llog("fetch movies remote api", model)
+      return model
     } catch {
       throw error as! MError
     }
@@ -44,16 +46,20 @@ public struct MovieRemoteApiImpl {
     do {
       let baseUrl = await remoteApiState.baseUrl
       let headers = await remoteApiState.headers
-      return try await httpClient.performRequest(
+      llog("searching...", params)
+      let model = try await httpClient.performRequest(
         decodable: MovieResponse.self,
-        url: URL(string: baseUrl + ApiEndpoints.discoverMovies.path)!,
+        url: URL(string: baseUrl + ApiEndpoints.movieSearch.path)!,
         method: .get,
         headers: headers,
         parameters: params.isEmpty ? nil : params,
         encoding: .url
       )
+      llog("search result remote api", model)
+      return model
     } catch {
-      throw error as! MError
+      llog("search error occured", error)
+      throw (error as! MError)
     }
   }
 
@@ -80,4 +86,26 @@ public struct MovieRemoteApiImpl {
 
 extension MovieRemoteApiImpl: MovieRemoteApi,
                               MovieSearchRemoteApi,
-                              MovieDetailRemoteApi {}
+                              MovieDetailRemoteApi {
+
+  public func llog(
+    _ key: String,
+    _ value: Any,
+    type: TLogType = .info,
+    subsystem: String = "module",
+    file: String = #fileID,
+    function: String = #function,
+    line: Int = #line
+  ) {
+    clog(
+      "\(Self.self) ≈ \(key)",
+      value,
+      type: type,
+      subsystem: subsystem,
+      file: file,
+      function: function,
+      line: line
+    )
+  }
+
+}

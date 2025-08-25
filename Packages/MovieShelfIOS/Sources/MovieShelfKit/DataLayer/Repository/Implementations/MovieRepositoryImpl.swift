@@ -12,16 +12,19 @@ import BZUtil
 
 public actor MovieRepositoryImpl: MovieRepository {
   public let movieRemoteApi: MovieRemoteApi
+  public let movieSearchRemoteApi: MovieSearchRemoteApi
   public let movieDetailRemoteApi: MovieDetailRemoteApi
   public let networkConnectionChecker: NetworkConnectionChecker
 
   public init(
     movieRemoteApi: MovieRemoteApi,
     movieDetailRemoteApi: MovieDetailRemoteApi,
+    movieSearchRemoteApi: MovieSearchRemoteApi,
     networkConnectionChecker: NetworkConnectionChecker
   ) {
     self.movieRemoteApi = movieRemoteApi
     self.movieDetailRemoteApi = movieDetailRemoteApi
+    self.movieSearchRemoteApi = movieSearchRemoteApi
     self.networkConnectionChecker = networkConnectionChecker
   }
 
@@ -32,6 +35,7 @@ public actor MovieRepositoryImpl: MovieRepository {
     }
 
     do {
+      llog("fetching movies...", "...")
       let responseModel = try await movieRemoteApi.fetchMovies(params: [:])
       guard !responseModel.results.isEmpty else {
         return []
@@ -50,7 +54,9 @@ public actor MovieRepositoryImpl: MovieRepository {
 
     do {
       let params: [String : String] = ["query" : title]
-      let responseModel = try await movieRemoteApi.fetchMovies(params: params)
+      llog("searching movies...", params)
+      let responseModel = try await movieSearchRemoteApi.fetchSearchMovies(params: params)
+      llog("search result", responseModel.results.count)
       guard !responseModel.results.isEmpty else {
         return []
       }
@@ -73,6 +79,31 @@ public actor MovieRepositoryImpl: MovieRepository {
     } catch {
       throw (error as! MError)
     }
+  }
+
+}
+
+
+extension MovieRepositoryImpl {
+
+  public func llog(
+    _ key: String,
+    _ value: Any,
+    type: TLogType = .info,
+    subsystem: String = "module",
+    file: String = #fileID,
+    function: String = #function,
+    line: Int = #line
+  ) {
+    clog(
+      "\(Self.self) ≈ \(key)",
+      value,
+      type: type,
+      subsystem: subsystem,
+      file: file,
+      function: function,
+      line: line
+    )
   }
 
 }

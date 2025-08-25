@@ -33,17 +33,14 @@ public final class MovieViewModel {
       )
       .removeDuplicates()
       .sink { [weak self] value in
-        clog("search query", value)
+        guard let self else { return }
+        update(movieSearchMode: !searchQuery.isEmpty)
+        if searchQuery.isEmpty {
+          filteredMovies.removeAll()
+        }
+        searchMovies()
       }
       .store(in: &cancellables)
-  }
-
-  nonisolated private func disposeAnyCancellables() {
-    Task { await removeCancellables() }
-  }
-
-  private func removeCancellables() {
-    cancellables.removeAll()
   }
 
   @ObservationIgnored private var cancellables = Set<AnyCancellable>()
@@ -53,6 +50,8 @@ public final class MovieViewModel {
   public var getMoviesLoading: Bool = false
   public var movies: [any MovieEntity] = []
   public var selectedMovie: (any MovieEntity)?
+  public var movieSearchMode: Bool = false
+  public var filteredMovies: [any MovieEntity] = []
   public var searchQuery: String = "" {
     didSet {
       debouncedSearchQuery.send(searchQuery)
@@ -62,6 +61,18 @@ public final class MovieViewModel {
   public var getMovieDetailError: MError?
   public var getMovieDetailLoading: Bool = false
   public var movieDetail: (any MovieDetailEntity)?
+
+  public func update(movieSearchMode: Bool) {
+    self.movieSearchMode = movieSearchMode
+  }
+
+  nonisolated private func disposeAnyCancellables() {
+    Task { await removeCancellables() }
+  }
+
+  private func removeCancellables() {
+    cancellables.removeAll()
+  }
 
   // MARK: - • Usecase
 
@@ -76,6 +87,22 @@ public final class MovieViewModel {
         getMoviesLoading = true
         let movies = try await movieRepository.getMovies()
         self.movies = movies
+        getMoviesLoading = false
+      } catch {
+        getMoviesError = (error as! MError)
+        getMoviesLoading = false
+      }
+    }
+  }
+
+  public func searchMovies() {
+    Task { [movieRepository] in
+      getMoviesError = nil
+      getMoviesLoading = true
+
+      do {
+        let movies = try await movieRepository.searchMovies(byTitle: searchQuery)
+        self.filteredMovies = movies
         getMoviesLoading = false
       } catch {
         getMoviesError = (error as! MError)
@@ -110,7 +137,32 @@ public final class MovieViewModel {
 
   public func presentDetail() {
     routePaths.append(MovieRoute.MovieDetail)
-    clog("route paths", routePaths)
+    llog("route paths", routePaths)
+  }
+
+}
+
+
+extension MovieViewModel {
+
+  public func llog(
+    _ key: String,
+    _ value: Any,
+    type: TLogType = .info,
+    subsystem: String = "module",
+    file: String = #fileID,
+    function: String = #function,
+    line: Int = #line
+  ) {
+    clog(
+      "\(Self.self) ≈ \(key)",
+      value,
+      type: type,
+      subsystem: subsystem,
+      file: file,
+      function: function,
+      line: line
+    )
   }
 
 }
