@@ -21,6 +21,7 @@ public struct MovieListScreen: View {
   public var body: some View {
     contentBody
       .navigationTitle("Movies")
+      .searchable(text: $movieViewModel.searchQuery, prompt: "Movie title...")
       .task {
         movieViewModel.getMovies()
       }

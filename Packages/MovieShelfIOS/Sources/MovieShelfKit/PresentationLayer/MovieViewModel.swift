@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import Combine
 import BZUtil
 
 
@@ -16,16 +17,47 @@ public final class MovieViewModel {
 
   public init(movieRepository: MovieRepository) {
     self.movieRepository = movieRepository
+    handleSearchQueryBehavior()
   }
 
   deinit {
     clog("💥 \(Self.self)", "destroyed")
+    disposeAnyCancellables()
   }
+
+  func handleSearchQueryBehavior() {
+    debouncedSearchQuery
+      .debounce(
+        for: .milliseconds(700),
+        scheduler: RunLoop.main
+      )
+      .removeDuplicates()
+      .sink { [weak self] value in
+        clog("search query", value)
+      }
+      .store(in: &cancellables)
+  }
+
+  nonisolated private func disposeAnyCancellables() {
+    Task { await removeCancellables() }
+  }
+
+  private func removeCancellables() {
+    cancellables.removeAll()
+  }
+
+  @ObservationIgnored private var cancellables = Set<AnyCancellable>()
+  @ObservationIgnored private var debouncedSearchQuery = PassthroughSubject<String, Never>()
 
   public var getMoviesError: MError?
   public var getMoviesLoading: Bool = false
   public var movies: [any MovieEntity] = []
   public var selectedMovie: (any MovieEntity)?
+  public var searchQuery: String = "" {
+    didSet {
+      debouncedSearchQuery.send(searchQuery)
+    }
+  }
 
   public var getMovieDetailError: MError?
   public var getMovieDetailLoading: Bool = false
