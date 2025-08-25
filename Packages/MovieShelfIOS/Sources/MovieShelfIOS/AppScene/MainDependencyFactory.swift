@@ -35,8 +35,11 @@ public final class MainDependencyFactory {
       return unit
     }
 
+    func makeFakeMovieRemoteApi() -> FakeMovieRemoteApiImpl {
+      return FakeMovieRemoteApiImpl()
+    }
+
     func makeMovieRemoteApi(remoteApiState: RemoteApiState) -> MovieRemoteApi {
-      //return FakeMovieRemoteApiImpl()
       return MovieRemoteApiImpl(remoteApiState: remoteApiState)
     }
 
@@ -56,6 +59,7 @@ public final class MainDependencyFactory {
     let networkConnectionChecker = makeNetworkConnectionChecker(connectionReachability: connectionReachability)
     let remoteApiState = makeRemoteApiState()
     let movieRemoteApi = makeMovieRemoteApi(remoteApiState: remoteApiState)
+    //let movieRemoteApi = makeFakeMovieRemoteApi()
     let movieDetailRemoteApi = movieRemoteApi as! MovieDetailRemoteApi
     self.remoteApiState = remoteApiState
     self.movieRepository = makeMovieRepository(

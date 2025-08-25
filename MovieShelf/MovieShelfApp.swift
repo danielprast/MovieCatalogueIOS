@@ -8,11 +8,15 @@
 import SwiftUI
 import MovieShelfIOS
 
+
 @main
 struct MovieShelfApp: App {
+
+  let dependencyFactory = MainDependencyFactory()
+
   var body: some Scene {
     WindowGroup {
-      MainScope()
+      MovieScope(mainDependencyFactory: self.dependencyFactory)
     }
   }
 }
