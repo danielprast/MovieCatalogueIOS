@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import BZUtil
 
 
 public struct MovieResponse: Codable, Sendable {
@@ -115,6 +116,40 @@ public struct MovieResponse: Codable, Sendable {
       self.video = video
       self.voteAverage = voteAverage
       self.voteCount = voteCount
+    }
+
+    public func makeMetadata() -> String {
+      guard
+        let jsonData = try? JSONEncoder().encode(self)
+      else {
+        return ""
+      }
+
+      let json = JsonResolver.parseDataToJson(jsonData)
+      guard !json.isEmpty else {
+        return ""
+      }
+
+      return JsonResolver.encodeToJson(dictionary: json)
+    }
+
+    public static func makeEmpty() -> MovieResponse.Result {
+      .init(
+        adult: false,
+        backdropPath: "",
+        genreIDS: [],
+        id: 0,
+        originalLanguage: "",
+        originalTitle: "",
+        overview: "",
+        popularity: 0,
+        posterPath: "",
+        releaseDate: "",
+        title: "",
+        video: false,
+        voteAverage: 0,
+        voteCount: 0
+      )
     }
   }
 }
