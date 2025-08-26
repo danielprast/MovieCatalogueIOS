@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import BZUtil
 
 
 public protocol MovieEntity: MEntity {
@@ -105,4 +106,21 @@ public struct MovieEntityModel: MovieEntity {
     )
   }
 
+}
+
+
+extension MovieEntityModel {
+
+  public static var samples: [MovieEntityModel] {
+    guard
+      let data = JsonResolver.readJsonFileFromResource(
+      bundle: Bundle.module,
+      fileName: "movie_list"
+    ),
+      let model = JsonResolver.decodeJson(from: data, outputType: MovieResponse.self)
+    else {
+      return []
+    }
+    return model.results.map { MovieEntityModel.mapFromMovieRemoteDTO($0) }
+  }
 }

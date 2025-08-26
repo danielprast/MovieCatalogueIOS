@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import BZUtil
 
 
 public protocol MovieDetailEntity: MEntity {
@@ -103,5 +104,22 @@ public struct MovieDetailEntityModel: MovieDetailEntity {
       posterImage: model.posterPath,
       backdropImage: model.backdropPath
     )
+  }
+}
+
+
+extension MovieDetailEntityModel {
+
+  public static var samples: MovieDetailEntityModel {
+    guard
+      let data = JsonResolver.readJsonFileFromResource(
+      bundle: Bundle.module,
+      fileName: "movie_detail"
+    ),
+      let model = JsonResolver.decodeJson(from: data, outputType: MovieDetailResponse.self)
+    else {
+      return .makeEmpty()
+    }
+    return MovieDetailEntityModel.mapFromRemoteDTO(model)
   }
 }
