@@ -47,23 +47,6 @@ public actor CoreDataPersistent: MovieLocalDataSource {
     return NSManagedObjectModel(contentsOf: modelURL)!
   }()
 
-  //  private func performBackgroundTask<T>(
-  //    _ block: @escaping (NSManagedObjectContext) throws -> T
-  //  ) async throws -> T {
-  //    try await withCheckedThrowingContinuation { continuation in
-  //      container.performBackgroundTask { context in
-  //        context.mergePolicy = NSMergePolicyType.mergeByPropertyObjectTrumpMergePolicyType
-  //
-  //        do {
-  //          let result = try block(context)
-  //          continuation.resume(returning: result)
-  //        } catch {
-  //          continuation.resume(throwing: error)
-  //        }
-  //      }
-  //    }
-  //  }
-
     public func fetchMovies() async throws -> [MovieCoreData] {
       try await withCheckedThrowingContinuation { [persistentContainer] continuation in
         let request = MovieCoreData.fetchRequest()
@@ -150,10 +133,8 @@ public actor CoreDataPersistent: MovieLocalDataSource {
     items: [any MovieEntity],
     in context: NSManagedObjectContext
   ) throws {
-    // 1. Fetch existing items to check for duplicates
     let existingItems = try fetchExistingItems(ids: items.map { $0.id }, in: context)
 
-    // 2. Create a dictionary for quick lookup
     var existingItemsDict: [String: MovieCoreData] = [:]
     existingItems.forEach { item in
       if let itemId = item.value(forKey: "id") as? String {
@@ -161,19 +142,13 @@ public actor CoreDataPersistent: MovieLocalDataSource {
       }
     }
 
-    // 3. Process each item
     for itemData in items {
       if let existingItem = existingItemsDict[itemData.id] {
-        // Update existing item
         updateEntity(existingItem, with: itemData)
       } else {
-        // Create new item
         createNewEntity(with: itemData, in: context)
       }
     }
-
-    // 4. Optional: Delete items not in the new batch (if needed)
-    // try deleteMissingItems(from: existingItems, keeping: items.map { $0.id }, in: context)
   }
 
   private func fetchExistingItems(
@@ -192,7 +167,6 @@ public actor CoreDataPersistent: MovieLocalDataSource {
   ) {
     entity.setValue(data.title, forKey: "title")
     entity.setValue(data.metadata, forKey: "metadata")
-    entity.setValue(Date(), forKey: "updatedAt")
   }
 
   private func createNewEntity(
@@ -203,22 +177,6 @@ public actor CoreDataPersistent: MovieLocalDataSource {
     newEntity.setValue(data.id, forKey: "id")
     newEntity.setValue(data.title, forKey: "title")
     newEntity.setValue(data.metadata, forKey: "metadata")
-  }
-
-  // Optional: Delete items that are not in the new batch
-  private func deleteMissingItems(
-    from existingItems: [MovieCoreData],
-    keeping idsToKeep: [String],
-    in context: NSManagedObjectContext
-  ) throws {
-    let itemsToDelete = existingItems.filter { item in
-      guard let itemId = item.value(forKey: "id") as? String else { return false }
-      return !idsToKeep.contains(itemId)
-    }
-
-    for item in itemsToDelete {
-      context.delete(item)
-    }
   }
 }
 
