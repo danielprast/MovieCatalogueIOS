@@ -43,6 +43,22 @@ public final class MainDependencyFactory {
       return MovieRemoteApiImpl(remoteApiState: remoteApiState)
     }
 
+    func makeOfflineFirstMovieRepository(
+      movieLocalDataSource: MovieLocalDataSource,
+      movieRemoteApi: MovieRemoteApi,
+      movieDetailRemoteApi: MovieDetailRemoteApi,
+      movieSearchRemoteApi: MovieSearchRemoteApi,
+      networkChecker: NetworkConnectionChecker
+    ) -> OfflineFirstMovieRepositoryImpl {
+      return OfflineFirstMovieRepositoryImpl.init(
+        movieLocalDataSource: movieLocalDataSource,
+        movieRemoteApi: movieRemoteApi,
+        movieDetailRemoteApi: movieDetailRemoteApi,
+        movieSearchRemoteApi: movieSearchRemoteApi,
+        networkConnectionChecker: networkChecker
+      )
+    }
+
     func makeMovieRepository(
       movieRemoteApi: MovieRemoteApi,
       movieDetailRemoteApi: MovieDetailRemoteApi,
@@ -64,8 +80,10 @@ public final class MainDependencyFactory {
     //let movieRemoteApi = makeFakeMovieRemoteApi()
     let movieDetailRemoteApi = movieRemoteApi
     let movieSearchRemoteApi = movieRemoteApi
+    let movieLocalDataSource = CoreDataPersistent.init()
     self.remoteApiState = remoteApiState
-    self.movieRepository = makeMovieRepository(
+    self.movieRepository = makeOfflineFirstMovieRepository(
+      movieLocalDataSource: movieLocalDataSource,
       movieRemoteApi: movieRemoteApi,
       movieDetailRemoteApi: movieDetailRemoteApi,
       movieSearchRemoteApi: movieSearchRemoteApi,

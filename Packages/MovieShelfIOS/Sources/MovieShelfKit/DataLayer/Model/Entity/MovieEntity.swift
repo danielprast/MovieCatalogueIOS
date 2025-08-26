@@ -18,6 +18,7 @@ public protocol MovieEntity: MEntity {
   var releaseDate: String { get }
   var rating: Double { get }
   var detail: any MovieDetailEntity { get }
+  var metadata: String { get }
 }
 
 
@@ -31,6 +32,7 @@ public struct MovieEntityModel: MovieEntity {
   public let releaseDate: String
   public let rating: Double
   public let detail: any MovieDetailEntity
+  public let metadata: String
 
   public init(
     id: String,
@@ -40,6 +42,7 @@ public struct MovieEntityModel: MovieEntity {
     posterImage: String,
     backdropImage: String,
     releaseDate: String,
+    metadata: String,
     rating: Double,
     detail: any MovieDetailEntity
   ) {
@@ -51,6 +54,7 @@ public struct MovieEntityModel: MovieEntity {
     self.backdropImage = backdropImage
     self.releaseDate = releaseDate
     self.rating = rating
+    self.metadata = metadata
     self.detail = detail
   }
 
@@ -62,6 +66,7 @@ public struct MovieEntityModel: MovieEntity {
     posterImage: String? = nil,
     backdropImage: String? = nil,
     releaseDate: String? = nil,
+    metadata: String? = nil,
     rating: Double? = nil,
     detail: MovieDetailEntityModel? = nil
   ) -> MovieEntityModel {
@@ -73,9 +78,23 @@ public struct MovieEntityModel: MovieEntity {
       posterImage: posterImage ?? self.posterImage,
       backdropImage: backdropImage ?? self.backdropImage,
       releaseDate: releaseDate ?? self.releaseDate,
+      metadata: metadata ?? self.metadata,
       rating: rating ?? self.rating,
       detail: detail ?? self.detail
     )
+  }
+
+  public func makeRemoteDTO() -> MovieResponse.Result {
+    guard
+      let data = JsonResolver.createData(fromString: metadata),
+      let dto = JsonResolver.decodeJson(
+        from: data,
+        outputType: MovieResponse.Result.self
+      )
+    else {
+      return .makeEmpty()
+    }
+    return dto
   }
 
   public static func mapFromMovieRemoteDTO(_ model: MovieResponse.Result) -> MovieEntityModel {
@@ -87,6 +106,7 @@ public struct MovieEntityModel: MovieEntity {
       posterImage: model.posterPath,
       backdropImage: model.backdropPath,
       releaseDate: model.releaseDate,
+      metadata: model.makeMetadata(),
       rating: model.voteAverage,
       detail: MovieDetailEntityModel.makeEmpty()
     )
@@ -101,6 +121,7 @@ public struct MovieEntityModel: MovieEntity {
       posterImage: "",
       backdropImage: "",
       releaseDate: "",
+      metadata: "",
       rating: 0,
       detail: MovieDetailEntityModel.makeEmpty()
     )

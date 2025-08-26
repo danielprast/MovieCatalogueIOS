@@ -95,12 +95,6 @@ struct MovieListView: View {
       .clipped()
       .background(RoundedRectangle(cornerRadius: 8).fill(Color.gray.opacity(0.2)))
 
-//      ZStack {
-//        ProgressView()
-//      }
-//      .frame(width: 150 * 0.667, height: 150)
-//      .background(RoundedRectangle(cornerRadius: 8).fill(Color.gray.opacity(0.2)))
-
       VStack(alignment: .leading, spacing: 8) {
         Text(model.title)
           .font(.headline)

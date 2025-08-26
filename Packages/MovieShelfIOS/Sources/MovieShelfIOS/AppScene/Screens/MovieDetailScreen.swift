@@ -55,6 +55,7 @@ struct MovieDetailContent: View {
       let bannerHeight: CGFloat = geo.size.width * aspectRatio
 
       ScrollView {
+
         VStack {
 
           ZStack {
