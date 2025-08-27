@@ -12,11 +12,11 @@ import BZUtil
 
 public actor CoreDataPersistent: MovieLocalDataSource {
 
-  private let persistentContainer: NSPersistentContainer
+  private let persistentContainer: MSCoreDataContainer
   private let moc: NSManagedObjectContext
 
   public init() {
-    persistentContainer = NSPersistentContainer(
+    persistentContainer = MSCoreDataContainer(
       name: Self.modelName,
       managedObjectModel: CoreDataManager.managedObjectModel
     )
@@ -47,21 +47,23 @@ public actor CoreDataPersistent: MovieLocalDataSource {
     return NSManagedObjectModel(contentsOf: modelURL)!
   }()
 
-    public func fetchMovies() async throws -> [MovieCoreData] {
-      try await withCheckedThrowingContinuation { [persistentContainer] continuation in
-        let request = MovieCoreData.fetchRequest()
-        request.sortDescriptors = [
-          NSSortDescriptor(keyPath: \MovieCoreData.title, ascending: true)
-        ]
-        do {
-          let entities = try persistentContainer.viewContext.fetch(request)
-          continuation.resume(with: .success(entities))
-        } catch {
-          let failure = MError.custom("Failed to fetch MovieCoreData entities. Reason: \(error.localizedDescription)")
-          continuation.resume(throwing: failure)
-        }
+  public func fetchMovies() async throws -> [MovieCoreData] {
+    try await withCheckedThrowingContinuation { [persistentContainer] continuation in
+      persistentContainer.createNewBackgroundContext()
+      let context = persistentContainer.backgroundContext
+      let request = MovieCoreData.fetchRequest()
+      request.sortDescriptors = [
+        NSSortDescriptor(keyPath: \MovieCoreData.title, ascending: true)
+      ]
+      do {
+        let entities = try context.fetch(request)
+        continuation.resume(with: .success(entities))
+      } catch {
+        let failure = MError.custom("Failed to fetch MovieCoreData entities. Reason: \(error.localizedDescription)")
+        continuation.resume(throwing: failure)
       }
     }
+  }
 
   // MARK: - • Movie Local Data Source
 
@@ -83,11 +85,12 @@ public actor CoreDataPersistent: MovieLocalDataSource {
 
   public func searchMovies(for title: String) async throws -> [any MovieEntity] {
     return try await withCheckedThrowingContinuation { [persistentContainer] continuation in
-      let moc = persistentContainer.viewContext
+      persistentContainer.createNewBackgroundContext()
+      let context = persistentContainer.backgroundContext
       let fetchRequest = MovieCoreData.fetchRequest()
       fetchRequest.predicate = NSPredicate(format: "title == %i", title)
       do {
-        let entities = try moc.fetch(fetchRequest)
+        let entities = try context.fetch(fetchRequest)
         let movies = entities.map {
           let dto = $0.makeMovieRemoteDTO()
           return MovieEntityModel.mapFromMovieRemoteDTO(dto)
@@ -102,27 +105,28 @@ public actor CoreDataPersistent: MovieLocalDataSource {
 
   // MARK: - •
 
-  var viewContext: NSManagedObjectContext {
-    persistentContainer.viewContext
-  }
-
-  func newBackgroundContext() -> NSManagedObjectContext {
-    return persistentContainer.newBackgroundContext()
-  }
-
   public func saveBatchData(_ items: [any MovieEntity]) async throws -> Bool {
     return try await withCheckedThrowingContinuation { [persistentContainer] continuation in
-      persistentContainer.viewContext.performAndWait {
+      persistentContainer.createNewBackgroundContext()
+      let taskContext = persistentContainer.backgroundContext
+      taskContext.name = "saveBatchMovies"
+      taskContext.transactionAuthor = "saveMovies"
+      taskContext.performAndWait {
+        let context = persistentContainer.backgroundContext
         do {
-          try self.processBatch(items: items, in: persistentContainer.viewContext)
+          try self.processBatch(
+            items: items,
+            in: context
+          )
 
-          if persistentContainer.viewContext.hasChanges {
-            try persistentContainer.viewContext.save()
+          if context.hasChanges {
+            try context.save()
+            llog("context saved", "!!!")
           }
 
           continuation.resume(with: .success(true))
         } catch {
-          persistentContainer.viewContext.rollback()
+          context.rollback()
           continuation.resume(throwing: error)
         }
       }
@@ -157,7 +161,6 @@ public actor CoreDataPersistent: MovieLocalDataSource {
   ) throws -> [MovieCoreData] {
     let fetchRequest: NSFetchRequest<MovieCoreData> = MovieCoreData.fetchRequest()
     fetchRequest.predicate = NSPredicate(format: "id IN %@", ids)
-
     return try context.fetch(fetchRequest)
   }
 
@@ -202,4 +205,20 @@ extension CoreDataPersistent {
       line: line
     )
   }
+}
+
+// MARK: - •
+
+public final class MSCoreDataContainer: NSPersistentContainer, @unchecked Sendable {
+
+  private var _backgroundContext: NSManagedObjectContext?
+  public var backgroundContext: NSManagedObjectContext {
+    _backgroundContext!
+  }
+
+  public func createNewBackgroundContext() {
+    let context = newBackgroundContext()
+    _backgroundContext = context
+  }
+
 }

@@ -19,6 +19,7 @@ public protocol MovieEntity: MEntity {
   var rating: Double { get }
   var detail: any MovieDetailEntity { get }
   var metadata: String { get }
+  var dictionaryValue: [String : Any & Sendable] { get }
 }
 
 
@@ -33,6 +34,14 @@ public struct MovieEntityModel: MovieEntity {
   public let rating: Double
   public let detail: any MovieDetailEntity
   public let metadata: String
+
+  public var dictionaryValue: [String : any Sendable] {
+    [
+        "id": id,
+        "title": title,
+        "metadata": metadata
+    ]
+  }
 
   public init(
     id: String,
