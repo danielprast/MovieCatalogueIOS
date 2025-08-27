@@ -88,7 +88,7 @@ public actor CoreDataPersistent: MovieLocalDataSource {
       persistentContainer.createNewBackgroundContext()
       let context = persistentContainer.backgroundContext
       let fetchRequest = MovieCoreData.fetchRequest()
-      fetchRequest.predicate = NSPredicate(format: "title == %i", title)
+      fetchRequest.predicate = NSPredicate(format: "title CONTAINS %@", title)
       do {
         let entities = try context.fetch(fetchRequest)
         let movies = entities.map {
