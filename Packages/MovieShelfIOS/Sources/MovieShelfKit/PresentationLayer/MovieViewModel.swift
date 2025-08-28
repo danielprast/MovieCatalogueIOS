@@ -18,6 +18,7 @@ public final class MovieViewModel {
   public init(movieRepository: MovieRepository) {
     self.movieRepository = movieRepository
     handleSearchQueryBehavior()
+    Task { getMovies() }
   }
 
   deinit {

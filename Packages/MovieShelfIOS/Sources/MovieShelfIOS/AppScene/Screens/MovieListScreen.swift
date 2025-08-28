@@ -12,13 +12,13 @@ import MovieShelfKit
 
 public struct MovieListScreen: View {
 
-  @Bindable private var movieViewModel: MovieViewModel
+  @Environment(MovieViewModel.self) private var movieViewModel
 
-  public init(movieViewModel: Bindable<MovieViewModel>) {
-    self._movieViewModel = movieViewModel
-  }
+  public init() {}
 
   public var body: some View {
+    @Bindable var movieViewModel = movieViewModel
+
     contentBody
       .frame(
         maxWidth: .infinity,
@@ -29,9 +29,6 @@ public struct MovieListScreen: View {
         text: $movieViewModel.searchQuery,
         prompt: "Movie title..."
       )
-      .task {
-        movieViewModel.getMovies()
-      }
   }
 
   public var contentBody: some View {

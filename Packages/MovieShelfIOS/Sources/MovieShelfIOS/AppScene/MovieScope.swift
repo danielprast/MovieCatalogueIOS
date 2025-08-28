@@ -12,18 +12,21 @@ import MovieShelfKit
 public struct MovieScope: View {
 
   let mainDependencyFactory: MainDependencyFactory
-  @Bindable private var movieViewModel: MovieViewModel
+  @State private var movieViewModel: MovieViewModel
 
   public init(mainDependencyFactory: MainDependencyFactory) {
     self.mainDependencyFactory = mainDependencyFactory
-    _movieViewModel = Bindable(wrappedValue: mainDependencyFactory.makeMovieViewModel())
+    _movieViewModel = State(wrappedValue: mainDependencyFactory.makeMovieViewModel())
   }
 
   public var body: some View {
+    @Bindable var movieViewModel = movieViewModel
+
     NavigationStack(
       path: $movieViewModel.routePaths
     ) {
-      MovieListScreen(movieViewModel: $movieViewModel)
+      MovieListScreen()
+        .environment(movieViewModel)
         .navigationDestination(for: MovieRoute.self) { route in
           switch route {
           case .MovieList:
