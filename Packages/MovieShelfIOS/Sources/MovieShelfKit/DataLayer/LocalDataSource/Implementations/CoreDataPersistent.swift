@@ -217,8 +217,7 @@ public final class MSCoreDataContainer: NSPersistentContainer, @unchecked Sendab
   }
 
   public func createNewBackgroundContext() {
-    let context = newBackgroundContext()
-    _backgroundContext = context
+    _backgroundContext = newBackgroundContext()
   }
 
 }
