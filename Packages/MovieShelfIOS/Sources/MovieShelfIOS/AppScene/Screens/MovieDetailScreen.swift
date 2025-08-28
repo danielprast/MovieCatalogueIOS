@@ -25,6 +25,9 @@ public struct MovieDetailScreen: View {
       .task {
         movieViewModel.getMovieDetail()
       }
+      .onDisappear {
+        movieViewModel.movieDetail = nil
+      }
   }
 
   @ViewBuilder

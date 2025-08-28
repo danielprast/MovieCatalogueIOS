@@ -35,11 +35,7 @@ public actor OfflineFirstMovieRepositoryImpl: MovieRepository {
   public func getMovies() async throws -> [any MovieEntity] {
     let isConnected = await networkConnectionChecker.isConnected
     if !isConnected {
-      do {
-        return try await movieLocalDataSource.loadMovies()
-      } catch {
-        throw (error as! MError)
-      }
+      return try await movieLocalDataSource.loadMovies()
     }
 
     do {
@@ -48,9 +44,7 @@ public actor OfflineFirstMovieRepositoryImpl: MovieRepository {
         return []
       }
       let entities = responseModel.results.map { MovieEntityModel.mapFromMovieRemoteDTO($0) }
-      let _ = try await Task.detached { [movieLocalDataSource] in
-        try await movieLocalDataSource.save(movies: entities)
-      }.value
+      let _ = try await movieLocalDataSource.save(movies: entities)
       return entities
     } catch {
       throw (error as! MError)
@@ -60,11 +54,7 @@ public actor OfflineFirstMovieRepositoryImpl: MovieRepository {
   public func searchMovies(byTitle title: String) async throws -> [any MovieEntity] {
     let isConnected = await networkConnectionChecker.isConnected
     if !isConnected {
-      do {
-        return try await movieLocalDataSource.searchMovies(for: title)
-      } catch {
-        throw (error as! MError)
-      }
+      return try await movieLocalDataSource.searchMovies(for: title)
     }
 
     do {

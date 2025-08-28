@@ -77,7 +77,6 @@ public final class MainDependencyFactory {
     let networkConnectionChecker = makeNetworkConnectionChecker(connectionReachability: connectionReachability)
     let remoteApiState = makeRemoteApiState()
     let movieRemoteApi = makeMovieRemoteApi(remoteApiState: remoteApiState)
-    //let movieRemoteApi = makeFakeMovieRemoteApi()
     let movieDetailRemoteApi = movieRemoteApi
     let movieSearchRemoteApi = movieRemoteApi
     let movieLocalDataSource = CoreDataPersistent.init()

@@ -12,11 +12,11 @@ import BZUtil
 
 public actor CoreDataPersistent: MovieLocalDataSource {
 
-  private let persistentContainer: NSPersistentContainer
+  private let persistentContainer: MSCoreDataContainer
   private let moc: NSManagedObjectContext
 
   public init() {
-    persistentContainer = NSPersistentContainer(
+    persistentContainer = MSCoreDataContainer(
       name: Self.modelName,
       managedObjectModel: CoreDataManager.managedObjectModel
     )
@@ -47,38 +47,23 @@ public actor CoreDataPersistent: MovieLocalDataSource {
     return NSManagedObjectModel(contentsOf: modelURL)!
   }()
 
-  //  private func performBackgroundTask<T>(
-  //    _ block: @escaping (NSManagedObjectContext) throws -> T
-  //  ) async throws -> T {
-  //    try await withCheckedThrowingContinuation { continuation in
-  //      container.performBackgroundTask { context in
-  //        context.mergePolicy = NSMergePolicyType.mergeByPropertyObjectTrumpMergePolicyType
-  //
-  //        do {
-  //          let result = try block(context)
-  //          continuation.resume(returning: result)
-  //        } catch {
-  //          continuation.resume(throwing: error)
-  //        }
-  //      }
-  //    }
-  //  }
-
-    public func fetchMovies() async throws -> [MovieCoreData] {
-      try await withCheckedThrowingContinuation { [persistentContainer] continuation in
-        let request = MovieCoreData.fetchRequest()
-        request.sortDescriptors = [
-          NSSortDescriptor(keyPath: \MovieCoreData.title, ascending: true)
-        ]
-        do {
-          let entities = try persistentContainer.viewContext.fetch(request)
-          continuation.resume(with: .success(entities))
-        } catch {
-          let failure = MError.custom("Failed to fetch MovieCoreData entities. Reason: \(error.localizedDescription)")
-          continuation.resume(throwing: failure)
-        }
+  public func fetchMovies() async throws -> [MovieCoreData] {
+    try await withCheckedThrowingContinuation { [persistentContainer] continuation in
+      persistentContainer.createNewBackgroundContext()
+      let context = persistentContainer.backgroundContext
+      let request = MovieCoreData.fetchRequest()
+      request.sortDescriptors = [
+        NSSortDescriptor(keyPath: \MovieCoreData.title, ascending: true)
+      ]
+      do {
+        let entities = try context.fetch(request)
+        continuation.resume(with: .success(entities))
+      } catch {
+        let failure = MError.custom("Failed to fetch MovieCoreData entities. Reason: \(error.localizedDescription)")
+        continuation.resume(throwing: failure)
       }
     }
+  }
 
   // MARK: - • Movie Local Data Source
 
@@ -100,11 +85,12 @@ public actor CoreDataPersistent: MovieLocalDataSource {
 
   public func searchMovies(for title: String) async throws -> [any MovieEntity] {
     return try await withCheckedThrowingContinuation { [persistentContainer] continuation in
-      let moc = persistentContainer.viewContext
+      persistentContainer.createNewBackgroundContext()
+      let context = persistentContainer.backgroundContext
       let fetchRequest = MovieCoreData.fetchRequest()
-      fetchRequest.predicate = NSPredicate(format: "title == %i", title)
+      fetchRequest.predicate = NSPredicate(format: "title CONTAINS %@", title)
       do {
-        let entities = try moc.fetch(fetchRequest)
+        let entities = try context.fetch(fetchRequest)
         let movies = entities.map {
           let dto = $0.makeMovieRemoteDTO()
           return MovieEntityModel.mapFromMovieRemoteDTO(dto)
@@ -119,27 +105,28 @@ public actor CoreDataPersistent: MovieLocalDataSource {
 
   // MARK: - •
 
-  var viewContext: NSManagedObjectContext {
-    persistentContainer.viewContext
-  }
-
-  func newBackgroundContext() -> NSManagedObjectContext {
-    return persistentContainer.newBackgroundContext()
-  }
-
   public func saveBatchData(_ items: [any MovieEntity]) async throws -> Bool {
     return try await withCheckedThrowingContinuation { [persistentContainer] continuation in
-      persistentContainer.viewContext.performAndWait {
+      persistentContainer.createNewBackgroundContext()
+      let taskContext = persistentContainer.backgroundContext
+      taskContext.name = "saveBatchMovies"
+      taskContext.transactionAuthor = "saveMovies"
+      taskContext.performAndWait {
+        let context = persistentContainer.backgroundContext
         do {
-          try self.processBatch(items: items, in: persistentContainer.viewContext)
+          try self.processBatch(
+            items: items,
+            in: context
+          )
 
-          if persistentContainer.viewContext.hasChanges {
-            try persistentContainer.viewContext.save()
+          if context.hasChanges {
+            try context.save()
+            llog("context saved", "!!!")
           }
 
           continuation.resume(with: .success(true))
         } catch {
-          persistentContainer.viewContext.rollback()
+          context.rollback()
           continuation.resume(throwing: error)
         }
       }
@@ -150,10 +137,8 @@ public actor CoreDataPersistent: MovieLocalDataSource {
     items: [any MovieEntity],
     in context: NSManagedObjectContext
   ) throws {
-    // 1. Fetch existing items to check for duplicates
     let existingItems = try fetchExistingItems(ids: items.map { $0.id }, in: context)
 
-    // 2. Create a dictionary for quick lookup
     var existingItemsDict: [String: MovieCoreData] = [:]
     existingItems.forEach { item in
       if let itemId = item.value(forKey: "id") as? String {
@@ -161,19 +146,13 @@ public actor CoreDataPersistent: MovieLocalDataSource {
       }
     }
 
-    // 3. Process each item
     for itemData in items {
       if let existingItem = existingItemsDict[itemData.id] {
-        // Update existing item
         updateEntity(existingItem, with: itemData)
       } else {
-        // Create new item
         createNewEntity(with: itemData, in: context)
       }
     }
-
-    // 4. Optional: Delete items not in the new batch (if needed)
-    // try deleteMissingItems(from: existingItems, keeping: items.map { $0.id }, in: context)
   }
 
   private func fetchExistingItems(
@@ -182,7 +161,6 @@ public actor CoreDataPersistent: MovieLocalDataSource {
   ) throws -> [MovieCoreData] {
     let fetchRequest: NSFetchRequest<MovieCoreData> = MovieCoreData.fetchRequest()
     fetchRequest.predicate = NSPredicate(format: "id IN %@", ids)
-
     return try context.fetch(fetchRequest)
   }
 
@@ -192,7 +170,6 @@ public actor CoreDataPersistent: MovieLocalDataSource {
   ) {
     entity.setValue(data.title, forKey: "title")
     entity.setValue(data.metadata, forKey: "metadata")
-    entity.setValue(Date(), forKey: "updatedAt")
   }
 
   private func createNewEntity(
@@ -203,22 +180,6 @@ public actor CoreDataPersistent: MovieLocalDataSource {
     newEntity.setValue(data.id, forKey: "id")
     newEntity.setValue(data.title, forKey: "title")
     newEntity.setValue(data.metadata, forKey: "metadata")
-  }
-
-  // Optional: Delete items that are not in the new batch
-  private func deleteMissingItems(
-    from existingItems: [MovieCoreData],
-    keeping idsToKeep: [String],
-    in context: NSManagedObjectContext
-  ) throws {
-    let itemsToDelete = existingItems.filter { item in
-      guard let itemId = item.value(forKey: "id") as? String else { return false }
-      return !idsToKeep.contains(itemId)
-    }
-
-    for item in itemsToDelete {
-      context.delete(item)
-    }
   }
 }
 
@@ -244,4 +205,19 @@ extension CoreDataPersistent {
       line: line
     )
   }
+}
+
+// MARK: - •
+
+public final class MSCoreDataContainer: NSPersistentContainer, @unchecked Sendable {
+
+  private var _backgroundContext: NSManagedObjectContext?
+  public var backgroundContext: NSManagedObjectContext {
+    _backgroundContext!
+  }
+
+  public func createNewBackgroundContext() {
+    _backgroundContext = newBackgroundContext()
+  }
+
 }
