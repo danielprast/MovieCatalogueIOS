@@ -128,6 +128,21 @@ public final class MovieViewModel {
       } catch {
         getMovieDetailError = (error as! MError)
         getMovieDetailLoading = false
+        movieDetail = MovieDetailEntityModel(
+          id: selectedMovie?.id ?? "",
+          movieId: selectedMovie?.movieId ?? -1,
+          title: selectedMovie?.title ?? "",
+          tagline: "",
+          genre: [],
+          overview: selectedMovie?.description ?? "",
+          releaseDate: selectedMovie?.releaseDate ?? "",
+          status: "",
+          rating: 0,
+          revenue: -1,
+          runtime: -1,
+          posterImage: selectedMovie?.posterImage ?? "",
+          backdropImage: ""
+        )
       }
     }
   }
